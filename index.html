@@ -7,33 +7,68 @@
 
     <!-- A-Frame -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <!-- AR.js para A-Frame (marker-based AR) -->
+    <!-- AR.js para A-Frame -->
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.7/aframe/build/aframe-ar.js"></script>
 
-    <style>
-      .arjs-loader {
-        height: 100%;
-        width: 100%;
-        position: absolute;
-        top: 0;
-        left: 0;
-        background-color: rgba(0, 0, 0, 0.8);
-        z-index: 9999;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-      .arjs-loader div {
-        text-align: center;
-        font-size: 1.25em;
-        color: white;
-        font-family: sans-serif;
-      }
-    </style>
+    <script>
+      // Anima opacidad y color de los materiales que ya trae el GLB.
+      // El color parte del color original del modelo y pasa por la paleta.
+      AFRAME.registerComponent("efecto-material", {
+        schema: {
+          colores: { default: "#ff0055,#00d4ff,#ffe600" },
+          opacidadMin: { default: 0.3 },
+          duracionOpacidad: { default: 2500 },
+          duracionColor: { default: 6000 },
+        },
+
+        init() {
+          this.materiales = [];
+          this.el.addEventListener("model-loaded", () => {
+            const vistos = new Set();
+            this.el.getObject3D("mesh").traverse((obj) => {
+              if (!obj.isMesh) return;
+              const lista = Array.isArray(obj.material) ? obj.material : [obj.material];
+              const clonados = lista.map((m) => {
+                const c = m.clone(); // no modificar materiales compartidos
+                c.transparent = true;
+                c.depthWrite = false;
+                c.needsUpdate = true;
+                if (!vistos.has(c.uuid)) {
+                  vistos.add(c.uuid);
+                  this.materiales.push({ mat: c, original: c.color.clone() });
+                }
+                return c;
+              });
+              obj.material = Array.isArray(obj.material) ? clonados : clonados[0];
+            });
+          });
+        },
+
+        tick(t) {
+          if (!this.materiales.length) return;
+          const d = this.data;
+          const paleta = d.colores.split(",").map((c) => new THREE.Color(c.trim()));
+
+          // Opacidad: oscila entre 1 y opacidadMin
+          const k = 0.5 + 0.5 * Math.cos((2 * Math.PI * t) / d.duracionOpacidad);
+          const opacidad = d.opacidadMin + (1 - d.opacidadMin) * k;
+
+          // Color: original -> paleta[0] -> paleta[1] -> ... -> original
+          const fase = ((t / d.duracionColor) % 1) * (paleta.length + 1);
+          const i = Math.floor(fase);
+          const f = fase - i;
+
+          for (const { mat, original } of this.materiales) {
+            const pasos = [original, ...paleta];
+            mat.color.copy(pasos[i]).lerp(pasos[(i + 1) % pasos.length], f);
+            mat.opacity = opacidad;
+          }
+        },
+      });
+    </script>
   </head>
 
   <body style="margin: 0; overflow: hidden">
-
     <a-scene
       vr-mode-ui="enabled: false"
       renderer="logarithmicDepthBuffer: true;"
@@ -45,22 +80,29 @@
       </a-assets>
 
       <a-marker preset="kanji">
+        <!-- Eje X: balanceo (cabeceo) de -25° a 25° -->
         <a-entity
-          gltf-model="#modelo"
-          position="0 0.5 0"
-          scale="1.5 1.5 1.5"
-          animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear"
-        ></a-entity>
+          animation="property: rotation; from: -25 0 0; to: 25 0 0; dir: alternate; loop: true; dur: 1500; easing: easeInOutSine"
+        >
+          <!-- Eje Y: giro completo sobre su propio eje -->
+          <a-entity animation="property: rotation; to: 0 360 0; loop: true; dur: 4000; easing: linear">
+            <!-- Eje Z: va y viene hacia adelante y atrás -->
+            <a-entity
+              animation="property: position; from: 0 0 -0.4; to: 0 0 0.4; dir: alternate; loop: true; dur: 2000; easing: easeInOutSine"
+            >
+              <!-- Opacidad + cambio de color sobre los materiales del GLB -->
+              <a-entity
+                gltf-model="#modelo"
+                efecto-material="opacidadMin: 0.3; duracionOpacidad: 2500; duracionColor: 6000"
+                position="0 0 0"
+                scale="0.3 0.3 0.3"
+              ></a-entity>
+            </a-entity>
+          </a-entity>
+        </a-entity>
       </a-marker>
 
       <a-entity camera></a-entity>
     </a-scene>
-
-    <script>
-      window.addEventListener("load", () => {
-        const loader = document.querySelector(".arjs-loader");
-        if (loader) loader.remove();
-      });
-    </script>
   </body>
 </html>
