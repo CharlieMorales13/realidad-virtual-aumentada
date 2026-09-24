@@ -1,8 +1,10 @@
 // Ajusta el modelo al mundo real (metros) al cargar:
 //  - su base queda centrada en el origen, para que apoye sobre la superficie detectada
-//  - su dimensión mayor mide APP.config.tamanoMetros al 100 %
+//  - su dimensión mayor mide tamanoMetros al 100 % (varía según el modelo elegido, ver js/config.js)
 // Después, el tamaño se controla con fijarFactor() (1 = 100 %).
 AFRAME.registerComponent("ajustar-modelo", {
+  schema: { tamanoMetros: { default: 0.4 } },
+
   init() {
     this.escalaNatural = 1;
     this.factor = 1;
@@ -18,7 +20,7 @@ AFRAME.registerComponent("ajustar-modelo", {
       malla.position.z -= centro.z;
       malla.position.y -= caja.min.y;
 
-      this.escalaNatural = APP.config.tamanoMetros / Math.max(tamano.x, tamano.y, tamano.z);
+      this.escalaNatural = this.data.tamanoMetros / Math.max(tamano.x, tamano.y, tamano.z);
       this.fijarFactor(this.factor);
 
       // ar-hit-test dibuja el reticle con el tamaño del objeto: que lo recalcule con el tamaño real

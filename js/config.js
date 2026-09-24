@@ -2,8 +2,15 @@
 window.APP = window.APP || {};
 
 APP.config = {
-  // Tamaño real del modelo al 100 %: su dimensión mayor medirá esto (en metros)
-  tamanoMetros: 0.4,
+  // Modelos disponibles en el selector de la pantalla de inicio.
+  //   id: usado para el <a-asset-item> (queda como "modelo-<id>") — sin espacios
+  //   archivo: ruta al .glb dentro de assets/
+  //   tamanoMetros: tamaño real de su dimensión mayor al 100 % (en metros)
+  //   efecto: si aplica la animación de color/opacidad (algunos modelos ya tienen su color final)
+  modelos: [
+    { id: "criatura", nombre: "Criatura de colores", archivo: "assets/modelo.glb", tamanoMetros: 0.4, efecto: true },
+    { id: "spongebob", nombre: "Bob Esponja", archivo: "assets/spongebob.glb", tamanoMetros: 0.35, efecto: false },
+  ],
 
   // Rango del tamaño como factor del 100 % (0.3 = 30 %, 3 = 300 %)
   factorMin: 0.3,

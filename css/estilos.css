@@ -25,6 +25,19 @@ html, body {
 }
 #inicio h1 { margin: 0; font-size: 24px; }
 #inicio p { margin: 0; max-width: 320px; font-size: 15px; opacity: 0.85; }
+#inicio .etiqueta { margin-top: 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.6; }
+
+#lista-modelos { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.modelo-boton {
+  padding: 10px 18px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  font-size: 15px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+.modelo-boton[aria-pressed="true"] { border-color: #0a7cff; background: rgba(10, 124, 255, 0.25); }
+
 #btn-iniciar {
   padding: 16px 36px;
   border: 0;

@@ -1,7 +1,10 @@
 // Anima opacidad y color de los materiales que ya trae el GLB.
 // El color parte del color original del modelo y pasa por la paleta.
+// Se puede desactivar por modelo (ver "efecto" en cada entrada de APP.config.modelos):
+// algunos modelos ya tienen su color final y no conviene alterarlo.
 AFRAME.registerComponent("efecto-material", {
   schema: {
+    activo: { default: true },
     colores: { default: APP.config.efecto.colores },
     opacidadMin: { default: APP.config.efecto.opacidadMin },
     duracionOpacidad: { default: APP.config.efecto.duracionOpacidad },
@@ -12,6 +15,8 @@ AFRAME.registerComponent("efecto-material", {
     this.materiales = [];
     this.reloj = 0; // tiempo propio: se detiene al pausar y no salta al reanudar
     this.el.addEventListener("model-loaded", () => {
+      this.materiales = [];
+      if (!this.data.activo) return; // se deja el material original del GLB, sin clonar
       const vistos = new Set();
       this.el.getObject3D("mesh").traverse((obj) => {
         if (!obj.isMesh) return;
